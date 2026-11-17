@@ -4,7 +4,7 @@ import logging
 from strategy_factory import get_strategy
 from market_context import MarketConditionIdentifier
 import time
-import pandas_ta as ta
+import fin_primitives.pandas  # noqa: F401  registers .fp (pandas-ta method names)
 import os # Import os
 
 def fetch_historical_data_in_chunks(kite, token, from_date, to_date, timeframe):
@@ -98,17 +98,17 @@ def run_backtest(kite, config, strategy_name, from_date, to_date, target_conditi
         cpr_pivots['prev_low'] = all_data_day.iloc[i-1]['low'].item()
         
         # Pre-calculate all indicators for the day
-        day_tf_df.ta.vwap(append=True)
-        day_tf_df['rsi'] = ta.rsi(day_tf_df['close'])
-        day_tf_df['ema_20'] = ta.ema(day_tf_df['close'], length=20)
-        day_tf_df['ema_50'] = ta.ema(day_tf_df['close'], length=50)
-        supertrend = ta.supertrend(day_tf_df['high'], day_tf_df['low'], day_tf_df['close'], length=10, multiplier=3)
+        day_tf_df.fp.vwap(append=True)
+        day_tf_df['rsi'] = day_tf_df['close'].fp.rsi()
+        day_tf_df['ema_20'] = day_tf_df['close'].fp.ema(length=20)
+        day_tf_df['ema_50'] = day_tf_df['close'].fp.ema(length=50)
+        supertrend = day_tf_df.fp.supertrend(length=10, multiplier=3)
         if supertrend is not None and not supertrend.empty: day_tf_df['supertrend_direction'] = supertrend.get('SUPERTd_10_3.0', 0)
-        macd = ta.macd(day_tf_df['close'], fast=12, slow=26, signal=9)
+        macd = day_tf_df['close'].fp.macd(fast=12, slow=26, signal=9)
         if macd is not None and not macd.empty:
             day_tf_df['macd'] = macd.get('MACD_12_26_9', 0)
             day_tf_df['macd_signal'] = macd.get('MACDs_12_26_9', 0)
-        day_tf_df['atr'] = ta.atr(day_tf_df['high'], day_tf_df['low'], day_tf_df['close'], length=14)
+        day_tf_df['atr'] = day_tf_df.fp.atr(length=14)
         day_tf_df['atr_ma'] = day_tf_df['atr'].rolling(window=20).mean()
         day_tf_df['spread'] = day_tf_df['high'] - day_tf_df['low']
         day_tf_df['volume_ma'] = day_tf_df['volume'].rolling(window=20).mean()

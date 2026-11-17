@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-import pandas_ta as ta
+import fin_primitives.pandas  # noqa: F401  registers .fp (pandas-ta method names)
 import aiohttp
 import json
 import datetime
@@ -220,7 +220,7 @@ class PositionManagementAgent:
         if indicator_type == 'MA':
             period = self.tsl_config.get('ma_period', 9)
             if f'ema_{period}' not in underlying_hist_df.columns:
-                underlying_hist_df[f'ema_{period}'] = ta.ema(underlying_hist_df['close'], length=period)
+                underlying_hist_df[f'ema_{period}'] = underlying_hist_df['close'].fp.ema(length=period)
             ma_value = underlying_hist_df.iloc[-1][f'ema_{period}']
             if self.active_trade['type'] == 'BUY' and underlying_price < ma_value: return True
             if self.active_trade['type'] == 'SELL' and underlying_price > ma_value: return True
