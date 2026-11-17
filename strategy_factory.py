@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-import pandas_ta as ta
+import fin_primitives.pandas  # noqa: F401  registers .fp (pandas-ta method names)
 import datetime
 from indicators import (
     calculate_cpr, calculate_rsi, check_rsi_divergence, 
@@ -88,11 +88,11 @@ class Supertrend_MACD_Strategy(BaseStrategy):
         if index < 1: return 'HOLD'
         
         if 'supertrend_direction' not in day_df.columns:
-            supertrend = ta.supertrend(day_df['high'], day_df['low'], day_df['close'])
+            supertrend = day_df.fp.supertrend()
             if supertrend is not None and not supertrend.empty:
                 day_df['supertrend_direction'] = supertrend.get('SUPERTd_7_3.0')
         if 'macd' not in day_df.columns:
-            macd = ta.macd(day_df['close'])
+            macd = day_df['close'].fp.macd()
             if macd is not None and not macd.empty:
                 day_df[['macd', 'macd_signal']] = macd[['MACD_12_26_9', 'MACDs_12_26_9']]
 
@@ -127,7 +127,7 @@ class VolatilityClusterStrategy(BaseStrategy):
         if index < 20: return 'HOLD'
 
         if 'atr' not in day_df.columns:
-            day_df['atr'] = ta.atr(day_df['high'], day_df['low'], day_df['close'], length=14)
+            day_df['atr'] = day_df.fp.atr(length=14)
         if 'atr_ma' not in day_df.columns:
             day_df['atr_ma'] = day_df['atr'].rolling(window=20).mean()
             
